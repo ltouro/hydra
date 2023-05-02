@@ -4,7 +4,6 @@ module Main where
 
 import Data.Aeson (Value, decode, encode)
 import qualified Data.ByteString.Char8 as LBS
-import qualified Data.ByteString.Lazy as LBS
 import Hydra.LogFilter (filterLog)
 import Hydra.Prelude
 import Options.Applicative (

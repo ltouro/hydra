@@ -463,15 +463,13 @@ instance
 -- ** Performing actions
 
 seedWorld ::
-  ( MonadDelay m
-  , MonadAsync m
+  ( MonadAsync m
   , MonadFork m
   , MonadMask m
   , MonadTimer m
   , MonadThrow (STM m)
   , MonadLabelledSTM m
-  ) =>
-  [(SigningKey HydraKey, CardanoSigningKey)] ->
+  ) =>[(SigningKey HydraKey, CardanoSigningKey)] ->
   ContestationPeriod ->
   RunMonad m ()
 seedWorld seedKeys seedCP = do
@@ -657,7 +655,7 @@ waitForHeadIsInitializing party nodes = go 100
 
 waitForUTxOToSpend ::
   forall m.
-  (MonadDelay m, MonadTimer m) =>
+  (MonadTimer m) =>
   UTxO ->
   CardanoSigningKey ->
   Value ->

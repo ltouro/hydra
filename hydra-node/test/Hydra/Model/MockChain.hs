@@ -53,8 +53,7 @@ import Test.Consensus.Cardano.Generators ()
 -- | Provide the logic to connect a list of `MockHydraNode` through a dummy chain.
 mockChainAndNetwork ::
   forall m.
-  ( MonadSTM m
-  , MonadTimer m
+  ( MonadTimer m
   , MonadAsync m
   , MonadFork m
   , MonadMask m
