@@ -19,6 +19,10 @@ library
     Hydra.Prelude
     Hydra.Version
 
+  other-modules:
+    Hydra.Version.Revision
+    Paths_hydra_prelude
+
   build-depends:
     , aeson
     , aeson-pretty
@@ -30,6 +34,7 @@ library
     , io-classes         >=0.3.0.0
     , QuickCheck
     , relude
+    , template-haskell
     , transformers
 
   default-extensions:
