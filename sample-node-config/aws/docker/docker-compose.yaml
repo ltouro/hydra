@@ -15,7 +15,6 @@ services:
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
         mode: non-blocking
     volumes:
-      - .:/data
       - ./network:/network
     working_dir: /data
     environment:
@@ -40,9 +39,8 @@ services:
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
         mode: non-blocking
     volumes:
-      - .:/config:ro
+      - ./credentials:/config:ro
       - ./network:/network
-      - ./credentials:/data
       - ./persistence:/data
     ports:
       - "5001:5001"
