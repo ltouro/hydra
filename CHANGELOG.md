@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 As a minor extension, we also keep a semantic version for the `UNRELEASED`
 changes.
 
+## UNRELEASED
+
+- **BREAKING**Protocol change: Wait for all transactions requested in a snapshot
+  to be seen before acknowledging it, and keep track of all transactions seen.
+
 ## [0.11.0] - 2023-06-30
 
 This release contains breaking changes of the persistence and on-chain scripts
