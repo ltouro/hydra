@@ -1,0 +1,97 @@
+{
+    "samples": [
+        {
+            "party": {
+                "vkey": "800cd78b3495332c09dcc76b8fe75124af8e2b365a006b922b2383f498ee9f10"
+            },
+            "tag": "ReqTx",
+            "transaction": {
+                "id": -27,
+                "inputs": [
+                    -30,
+                    -24,
+                    -23,
+                    -16,
+                    -13,
+                    -12,
+                    -8,
+                    -2,
+                    0,
+                    4,
+                    5,
+                    6,
+                    10,
+                    12,
+                    14,
+                    15,
+                    22,
+                    26,
+                    30
+                ],
+                "outputs": [
+                    -29,
+                    -22,
+                    -20,
+                    -13,
+                    -11,
+                    3,
+                    5,
+                    11,
+                    12,
+                    13,
+                    17,
+                    20,
+                    22,
+                    25,
+                    30
+                ]
+            }
+        },
+        {
+            "party": {
+                "vkey": "b3c3406a567303a077afff1972c211c2b8ef38b0c44c822d8d663d57ae625441"
+            },
+            "signed": "2d5bcd63cc241d6e06702d5155447f9e11a6c8a7db5b21f7e65b1301597b695d434fc14781c1c8ac060769fcaaf4741b96370557f6ab09a318c81f2c05b4a304",
+            "snapshotNumber": 11,
+            "tag": "AckSn"
+        },
+        {
+            "nodeId": "xqsrizgdyauhnqjxomyqsmvceurgd",
+            "tag": "Connected"
+        },
+        {
+            "party": {
+                "vkey": "fcea2ca27e45b50b8a97e2f2984d418ff075cbef12f71fce8bade5753a65be8c"
+            },
+            "tag": "ReqTx",
+            "transaction": {
+                "id": -19,
+                "inputs": [
+                    -12,
+                    3,
+                    4,
+                    21
+                ],
+                "outputs": [
+                    -25,
+                    -18,
+                    -13,
+                    1,
+                    11,
+                    13,
+                    19,
+                    25
+                ]
+            }
+        },
+        {
+            "party": {
+                "vkey": "7a0063ec713c83041ff9574b89f4eb054b60ccd67c4eabb9aad1019d2ba145d0"
+            },
+            "signed": "d4d90fe0debd43b1d9a4d7e34e6440f3723fbd0f777c53971bbbfb93c8ea67963ae8a241be007d7c141ad799af1cdc9f3fa882352022c900caab3b947e079506",
+            "snapshotNumber": 0,
+            "tag": "AckSn"
+        }
+    ],
+    "seed": 2132887082
+}

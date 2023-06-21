@@ -1189,7 +1189,7 @@ definitions:
             $ref: "api.yaml#/components/schemas/Party"
           snapshotNumber:
             $ref: "api.yaml#/components/schemas/SnapshotNumber"
-          transactions:
+          transactionIds:
             type: array
             items:
               $ref: "api.yaml#/components/schemas/TxId"
@@ -1641,12 +1641,12 @@ definitions:
         additionalProperties: false
         required:
           - tag
-          - unseeTxId
+          - unseenTxId
         properties:
           tag:
             type: string
             enum: ["WaitOnSeenTxs"]
-          tag:
+          unseenTxId:
             type: array
             items:
               $ref: "api.yaml#/components/schemas/TxId"
