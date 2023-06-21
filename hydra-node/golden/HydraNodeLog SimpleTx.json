@@ -2,42 +2,277 @@
     "samples": [
         {
             "by": {
-                "vkey": "0b431968cf7fbdb3880b00164d88ed8dc71d3e02b09b4e6dbc833c3305d6c22e"
+                "vkey": "6a00641c514b3af4d38d7a0766757125eced51deb30f64e08b6a41353594c602"
             },
-            "eventId": 14721254,
-            "tag": "EndEvent"
+            "outcome": {
+                "effects": [],
+                "headState": {
+                    "contents": {
+                        "chainState": {
+                            "slot": 9
+                        },
+                        "confirmedSnapshot": {
+                            "signatures": {
+                                "multiSignature": [
+                                    "998bdece9277dc68c7770c261356cfa16d33550c88aeeb28aa1b7bf97ad379cb4517892a50aa095f92f87f6aa4d2cbe5dea03cd8559a8be5a1174422e0866f04",
+                                    "218ae72f936644b045a61cbed2139537a333e9d2e528c6632eb233b968bba17ac9be88e290b396b87365fe32cbf1f288fec9ec165790e888fe07bf60c989f300",
+                                    "9ef2b4603c6a2ccb6c898f88bd0fc694b4efea9133469103c9650c676231a23b9386a367ff0d7cb6566513ead64f5d34bb25bbaae8b849d7ffcf2ad95bb4580b",
+                                    "c33e91b9aa49f196bcc37895eefd6f549ccec2a3163ce9ed6c1073ae3ae7e6c850b071e6533e9ca1b9cd2753a65a96c854686556edbaabe6194385fd87956800"
+                                ]
+                            },
+                            "snapshot": {
+                                "confirmedTransactions": [],
+                                "snapshotNumber": 30,
+                                "utxo": [
+                                    -28,
+                                    -14,
+                                    -10,
+                                    -9,
+                                    -4,
+                                    1,
+                                    13,
+                                    20,
+                                    23
+                                ]
+                            },
+                            "tag": "ConfirmedSnapshot"
+                        },
+                        "contestationDeadline": "1864-05-23T12:24:38.459452588132Z",
+                        "headId": "d1a0c45e675d1daf0c5c8f83511a25ef",
+                        "parameters": {
+                            "contestationPeriod": 43200,
+                            "parties": [
+                                {
+                                    "vkey": "917b55eedb8b9ee600b7e275c35c5134e646a53da0da1d7b6155ae5ec3326369"
+                                },
+                                {
+                                    "vkey": "1938c83bc4e71c605b923c7746c96baf8093452c3f873b7a4f53c76ae28aef82"
+                                },
+                                {
+                                    "vkey": "e1d69b6bb73cd56d4a2403ca22e723e91e6164eb1863ab0b5790b4ccbb43333d"
+                                },
+                                {
+                                    "vkey": "3cef816b02c82decc35d2db8dca603ee5aae5ab72fa1b0dd6a5cc479c147635b"
+                                },
+                                {
+                                    "vkey": "cc022110dd4e61e3c60d36f5b56dd8025f70fc45c50487a731d4eccd9bc2dd99"
+                                },
+                                {
+                                    "vkey": "ff60648432fe413a55f51d7bdac9d7ee82c4d986777ddc1ec65ff20b7aefc84b"
+                                },
+                                {
+                                    "vkey": "2241ac5d4f3fcd88668d70dce58c0861aaa8b6c64b86af6393f2a110ef79192c"
+                                },
+                                {
+                                    "vkey": "b9e2dd2e8a18715904c8e7d036660705c7c073738d7de88658733a822c9ffb7c"
+                                },
+                                {
+                                    "vkey": "49b37c4b4e4aba441310717283a7fb34e431db60f07ab6da2a8011c0ffa7f1e9"
+                                },
+                                {
+                                    "vkey": "1867f774c4b91318b02677b4d444904b5fc1e71eb5314e3f7a07a72f30ae76c2"
+                                },
+                                {
+                                    "vkey": "262dfdbc1a09762ad6646581dd29ac44507f05b75758d171807898fed3cdd85e"
+                                },
+                                {
+                                    "vkey": "5752b4f365f48313b748b2dda866cf5da4dd7426d73a40a086b708a0d167baca"
+                                },
+                                {
+                                    "vkey": "0d358efd427c0d6e24448679fdeefdac114291a029d1f851f00b17374077d1ef"
+                                },
+                                {
+                                    "vkey": "3f7d63bfc4717938e2992d3c39d0f94fe4d69be919da14e19c0f4eecd88c3129"
+                                },
+                                {
+                                    "vkey": "b0fb861dfc27a0f6010e68808b4975a992a444b27cf9568dde430221fa638178"
+                                },
+                                {
+                                    "vkey": "96e877d101810b62c1b67e5778ace4f8385b718fd570175f731c80bd0e292923"
+                                },
+                                {
+                                    "vkey": "722ddb7d36ea13474811a9fb007ba44e4c3ebb0f68ffb3d72ce7dce903a1b341"
+                                },
+                                {
+                                    "vkey": "6eab57ad026b2118df0108ffccf119b4ea91ff9c75f88192c228a6ddb21713fe"
+                                },
+                                {
+                                    "vkey": "49789f1eb675e123ffb6bd967b410e049887a2b9d96dfbb400ff9d72a9b70af8"
+                                }
+                            ]
+                        },
+                        "readyToFanoutSent": false
+                    },
+                    "tag": "Closed"
+                },
+                "tag": "NewState"
+            },
+            "tag": "LogicOutcome"
         },
         {
             "by": {
-                "vkey": "89a6d931ed1c0d79635a10994da016ba7e712f001f87349a095ac0e5ee295773"
+                "vkey": "af0107529067ca663c2693b0a8b045ff09ff6da8d52d9209f2a6954f323545a3"
             },
-            "effectId": 18849,
-            "eventId": 15134621,
+            "outcome": {
+                "effects": [
+                    {
+                        "message": {
+                            "party": {
+                                "vkey": "3c1747a06290f80feae92a06b71328c80ef4be1a395673fbed5a42355d82f14b"
+                            },
+                            "signed": "08f99b3e6b9ee941d5f6a190bc44d051bb844744a9a20ef544e2e8dea6c59c949d987c199094fbed3a3d39c7dd25a7216b7100e0ecc0542e034b07a7f443160d",
+                            "snapshotNumber": 24,
+                            "tag": "AckSn"
+                        },
+                        "tag": "NetworkEffect"
+                    },
+                    {
+                        "message": {
+                            "nodeId": "auamzrazxvlqlxg",
+                            "tag": "Disconnected"
+                        },
+                        "tag": "NetworkEffect"
+                    },
+                    {
+                        "postChainTx": {
+                            "headParameters": {
+                                "contestationPeriod": 604800,
+                                "parties": [
+                                    {
+                                        "vkey": "fac84ea0f789044ae59a289a118c4788d94e13ca5f7f540bdaa84b1f3b604239"
+                                    },
+                                    {
+                                        "vkey": "88d0b15c1db5a122c36538d2eb5a2b25640b5be86ba6d2b5b43ca2654f27beb7"
+                                    },
+                                    {
+                                        "vkey": "27c965a98f37dfe55b142de10f3d7371b96a4a3a7a3f5108cf96a9927658209d"
+                                    },
+                                    {
+                                        "vkey": "c2a4bda0e42cf582ee60a0cf3e6874c5e51ac789b706311ecbe3d53bd0319738"
+                                    },
+                                    {
+                                        "vkey": "b45c5712faa9bd293ca6259d2d7c8a672602c4eba7d07890ed428739482d6992"
+                                    },
+                                    {
+                                        "vkey": "1186a778386d575472684c6ae8cf2820693ca6787259cc4ab3258622d5fd7b23"
+                                    },
+                                    {
+                                        "vkey": "6879a426cb89551b934b0201ac332b51f32a653d54617e5ab9df52345d70ee78"
+                                    },
+                                    {
+                                        "vkey": "bc0367c485f379b9391e1c179c9ffda602d7f81fd9379a69f5edcafaafe2b436"
+                                    },
+                                    {
+                                        "vkey": "ca3852646e49fc95b8aabf60341866bfd79d314d8413d5ad8e07e74332d89c81"
+                                    },
+                                    {
+                                        "vkey": "19e53acebf6d03d9f4e90d815acf76f79774e63f46b258f719672016c122ad57"
+                                    },
+                                    {
+                                        "vkey": "6d2251673ede6583a811e156c2f8049d59b2b2e4b35f031f83cee0b43b5702d6"
+                                    },
+                                    {
+                                        "vkey": "a1cbeba7a699b98e715b68d6d5548192474f4fdf0da2ed55c0fe902ec05a48d2"
+                                    },
+                                    {
+                                        "vkey": "2a1b669a1a07d50999da49bb1f4a56355ca8769a70908f0f3266ea5933dcebf7"
+                                    },
+                                    {
+                                        "vkey": "bded2946f7d76f048cd22d65fe88e7dfbdc93b0268642e3fe3d9faad7340e384"
+                                    },
+                                    {
+                                        "vkey": "0364265a7efed4630df353bbdf7c5ea4c8998abdf2655de77c7ea065b2a8c3f4"
+                                    },
+                                    {
+                                        "vkey": "e27a731c25f87a4ce184f9688258dd34da9e30e82e7bb21e41ffda2bc403a8f5"
+                                    },
+                                    {
+                                        "vkey": "e0b07bc38da7f2fc638005dfdd57dd1072b093eda20e21ae55e61c088560e9b3"
+                                    },
+                                    {
+                                        "vkey": "d5d67bde1f41461e80c8f0c150e5ebfc23c8798d136a1136f252554f4163d2d7"
+                                    },
+                                    {
+                                        "vkey": "8cec5725e3a0f6079f59664500a6928edd603f20a78217bb05af80f847e56dc3"
+                                    },
+                                    {
+                                        "vkey": "8854ed6a8da5ecce62ea322718a73c091789496cef9ec386b168ea35055f2682"
+                                    },
+                                    {
+                                        "vkey": "d0d8a2a51a3dccf601108d8850d61700d2a6df1b8d90d7ee08c4629158a0f661"
+                                    },
+                                    {
+                                        "vkey": "6a9d1e4697e178b258fb2157617c854de64659662da72e2f92e8f88cc3b3929a"
+                                    }
+                                ]
+                            },
+                            "tag": "InitTx"
+                        },
+                        "tag": "OnChainEffect"
+                    },
+                    {
+                        "postChainTx": {
+                            "contestationDeadline": "1864-05-18T14:11:34.059245839656Z",
+                            "tag": "FanoutTx",
+                            "utxo": [
+                                -24,
+                                -22,
+                                -17,
+                                -16,
+                                -8,
+                                -3,
+                                1,
+                                5,
+                                19
+                            ]
+                        },
+                        "tag": "OnChainEffect"
+                    }
+                ],
+                "tag": "OnlyEffects"
+            },
+            "tag": "LogicOutcome"
+        },
+        {
+            "by": {
+                "vkey": "739785bc9afe510a6209ab4ee7a7390dba8e90182698470169a6c2f379104a85"
+            },
+            "outcome": {
+                "error": {
+                    "contents": {
+                        "lastSeenSn": 6,
+                        "requestedSn": 19,
+                        "tag": "AckSnNumberInvalid"
+                    },
+                    "tag": "RequireFailed"
+                },
+                "tag": "Error"
+            },
+            "tag": "LogicOutcome"
+        },
+        {
+            "by": {
+                "vkey": "fece90592e1dcd0b2ea43e1e611c1538a5496a01b4879050bf43f4a3df634af9"
+            },
+            "effect": {
+                "message": {
+                    "nodeId": "mqxbrwsyelkd",
+                    "tag": "Connected"
+                },
+                "tag": "NetworkEffect"
+            },
+            "effectId": 12198,
+            "eventId": 13496807,
+            "tag": "BeginEffect"
+        },
+        {
+            "by": {
+                "vkey": "d0a9fd948c3cb639aa91a01e4d126061c00075ab5599c7b7162c3bab6944825f"
+            },
+            "effectId": 23911,
+            "eventId": 2605963,
             "tag": "EndEffect"
-        },
-        {
-            "by": {
-                "vkey": "c9a308bcbb8866cc277b706e076404305fd78d062e8afc734221417d7bd09624"
-            },
-            "effectId": 29930,
-            "eventId": 5375330,
-            "tag": "EndEffect"
-        },
-        {
-            "by": {
-                "vkey": "76b54623af7665b7b17e36fe8fe90444b3f647020aef8c1d2cd1a7b4d1c546b4"
-            },
-            "effectId": 11127,
-            "eventId": 8337099,
-            "tag": "EndEffect"
-        },
-        {
-            "by": {
-                "vkey": "0cb8996d78202c704503112bc3303e5a3e39758f1073a581e694ffb5f05e5034"
-            },
-            "eventId": 13359938,
-            "tag": "EndEvent"
         }
     ],
-    "seed": -637345377
+    "seed": -434693730
 }

@@ -5,7 +5,7 @@ module Hydra.Network.Message where
 import Hydra.Prelude
 
 import Hydra.Crypto (Signature)
-import Hydra.Ledger (IsTx, UTxOType)
+import Hydra.Ledger (IsTx (TxIdType), UTxOType)
 import Hydra.Network (NodeId)
 import Hydra.Party (Party)
 import Hydra.Snapshot (Snapshot, SnapshotNumber)
@@ -14,17 +14,21 @@ import Hydra.Snapshot (Snapshot, SnapshotNumber)
 -- here into the 'NetworkEvent'
 data Message tx
   = ReqTx {party :: Party, transaction :: tx}
-  | ReqSn {party :: Party, snapshotNumber :: SnapshotNumber, transactions :: [tx]}
+  | ReqSn {party :: Party, snapshotNumber :: SnapshotNumber, transactionIds :: [TxIdType tx]}
   | AckSn {party :: Party, signed :: Signature (Snapshot tx), snapshotNumber :: SnapshotNumber}
   | Connected {nodeId :: NodeId}
   | Disconnected {nodeId :: NodeId}
-  deriving stock (Generic, Eq, Show)
-  deriving anyclass (ToJSON, FromJSON)
+  deriving stock (Generic)
+
+deriving instance (IsTx tx) => Eq (Message tx)
+deriving instance (IsTx tx) => Show (Message tx)
+deriving instance (IsTx tx) => ToJSON (Message tx)
+deriving instance (IsTx tx) => FromJSON (Message tx)
 
 instance IsTx tx => Arbitrary (Message tx) where
   arbitrary = genericArbitrary
 
-instance (ToCBOR tx, ToCBOR (UTxOType tx)) => ToCBOR (Message tx) where
+instance (ToCBOR tx, ToCBOR (UTxOType tx), ToCBOR (TxIdType tx)) => ToCBOR (Message tx) where
   toCBOR = \case
     ReqTx party tx -> toCBOR ("ReqTx" :: Text) <> toCBOR party <> toCBOR tx
     ReqSn party sn txs -> toCBOR ("ReqSn" :: Text) <> toCBOR party <> toCBOR sn <> toCBOR txs
@@ -32,7 +36,7 @@ instance (ToCBOR tx, ToCBOR (UTxOType tx)) => ToCBOR (Message tx) where
     Connected nodeId -> toCBOR ("Connected" :: Text) <> toCBOR nodeId
     Disconnected nodeId -> toCBOR ("Disconnected" :: Text) <> toCBOR nodeId
 
-instance (FromCBOR tx, FromCBOR (UTxOType tx)) => FromCBOR (Message tx) where
+instance (FromCBOR tx, FromCBOR (UTxOType tx), FromCBOR (TxIdType tx)) => FromCBOR (Message tx) where
   fromCBOR =
     fromCBOR >>= \case
       ("ReqTx" :: Text) -> ReqTx <$> fromCBOR <*> fromCBOR
