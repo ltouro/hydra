@@ -173,7 +173,7 @@ spec =
             Error (RequireFailed SnapshotAlreadySigned{receivedSignature}) -> receivedSignature == carol
             _ -> False
 
-      it "waits if we receive a snapshot with transaction not applicable on previous snapshot" $ do
+      it "rejects a snapshot with transaction not applicable on previous snapshot" $ do
         let reqTx42 = NetworkEvent defaultTTL $ ReqTx alice (SimpleTx 42 mempty (utxoRef 1))
             reqTx1 = NetworkEvent defaultTTL $ ReqTx alice (SimpleTx 1 (utxoRef 1) (utxoRef 2))
             event = NetworkEvent defaultTTL $ ReqSn alice 1 [1]
@@ -183,7 +183,7 @@ spec =
         s2 <- assertNewState $ update bobEnv ledger s1 reqTx1
 
         update bobEnv ledger s2 event
-          `shouldBe` Wait (WaitOnNotApplicableTx (ValidationError "cannot apply transaction"))
+          `shouldBe` Error (RequireFailed (SnapshotDoesNotApply 1 1 (ValidationError "cannot apply transaction")))
 
       it "waits if we receive a snapshot with unseen transactions" $ do
         let s0 = inOpenState threeParties ledger
