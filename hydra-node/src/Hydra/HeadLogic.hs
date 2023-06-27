@@ -38,6 +38,7 @@ import Hydra.Crypto (
   Signature,
   SigningKey,
   VerificationKey,
+  Verified (..),
   aggregateInOrder,
   sign,
   verifyMultiSignature,
@@ -801,7 +802,7 @@ onOpenNetworkAckSn env openState otherParty snapshotSignature sn =
         ifAllMembersHaveSigned snapshot sigs' $ do
           -- Spec: σ̃ ← MS-ASig(k_H, ̂Σ̂)
           let multisig = aggregateInOrder sigs' parties
-          requireVerifiedMultisignature multisig snapshot $ do
+          requireVerifiedMultisignature multisig snapshot $
             NewState
               ( onlyUpdateCoordinatedHeadState $
                   coordinatedHeadState
@@ -846,9 +847,12 @@ onOpenNetworkAckSn env openState otherParty snapshotSignature sn =
           )
 
   requireVerifiedMultisignature multisig msg cont =
-    if verifyMultiSignature vkeys multisig msg
-      then cont
-      else Error $ RequireFailed $ InvalidMultisignature{multisig = show multisig, vkeys}
+    case verifyMultiSignature vkeys multisig msg of
+      Verified -> cont
+      FailedKeys failures ->
+        Error $
+          RequireFailed $
+            InvalidMultisignature{multisig = show multisig, vkeys = failures}
 
   vkeys = vkey <$> parties
 
