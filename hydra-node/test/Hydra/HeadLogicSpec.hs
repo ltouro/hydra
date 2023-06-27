@@ -198,7 +198,7 @@ spec =
         let s0 = inOpenState threeParties ledger
             reqSn = NetworkEvent defaultTTL $ ReqSn alice 1 [1]
         update bobEnv ledger s0 reqSn
-          `shouldBe` Wait (WaitOnSeenTxs [1])
+          `shouldBe` Wait (WaitOnTxs [1])
 
       it "waits if we receive an AckSn for an unseen snapshot" $ do
         let snapshot = Snapshot 1 mempty []

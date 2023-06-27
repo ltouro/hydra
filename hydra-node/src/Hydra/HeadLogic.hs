@@ -383,7 +383,7 @@ data WaitReason tx
   = WaitOnNotApplicableTx {validationError :: ValidationError}
   | WaitOnSnapshotNumber {waitingFor :: SnapshotNumber}
   | WaitOnSeenSnapshot
-  | WaitOnSeenTxs {unseenTxIds :: [TxIdType tx]}
+  | WaitOnTxs {waitingForTxIds :: [TxIdType tx]}
   | WaitOnContestationDeadline
   deriving stock (Generic)
 
@@ -725,7 +725,7 @@ onOpenNetworkReqSn env ledger st otherParty sn requestedTxIds =
   waitSeenTxs continue =
     case toList (fromList requestedTxIds \\ Map.keysSet allTxs) of
       [] -> continue (mapMaybe (`Map.lookup` allTxs) requestedTxIds)
-      unseen -> Wait $ WaitOnSeenTxs unseen
+      unseen -> Wait $ WaitOnTxs unseen
 
   -- NOTE: at this point we know those transactions apply on the seenUTxO because they
   -- are part of the seenTxs. The snapshot can contain less transactions than the ones
