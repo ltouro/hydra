@@ -102,7 +102,7 @@ spec =
             s0 = inOpenState threeParties ledger
 
         update bobEnv ledger s0 reqTx
-          `shouldBe` Wait (WaitOnNotApplicableTx (ValidationError "cannot apply transaction"))
+          `hasWait` WaitOnNotApplicableTx (ValidationError "cannot apply transaction")
 
       it "confirms snapshot given it receives AckSn from all parties" $ do
         let reqSn = NetworkEvent defaultTTL $ ReqSn alice 1 []
@@ -477,6 +477,16 @@ hasEffect outcome effect =
       | otherwise -> failure $ "Missing effect " <> show effect <> " in produced effects: " <> show effects
     Combined l r ->
       hasEffect l effect `orElse` hasEffect r effect
+    _ -> failure $ "Unexpected outcome: " <> show outcome
+
+hasWait :: (HasCallStack, IsChainState tx) => Outcome tx -> WaitReason tx -> IO ()
+hasWait outcome waitReason =
+  case outcome of
+    Wait reason
+      | reason == waitReason -> pure ()
+      | otherwise -> failure $ "Missing wait reason " <> show waitReason <> ", found : " <> show reason
+    Combined l r ->
+      hasWait l waitReason `orElse` hasWait r waitReason
     _ -> failure $ "Unexpected outcome: " <> show outcome
 
 hasEffectSatisfying :: (HasCallStack, IsChainState tx) => Outcome tx -> (Effect tx -> Bool) -> IO ()

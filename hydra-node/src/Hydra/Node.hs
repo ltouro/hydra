@@ -171,9 +171,9 @@ processNextEvent HydraNode{nodeState, ledger, env} e =
     Error err -> (Error err, s)
     Wait reason -> (Wait reason, s)
     Combined l r ->
-      let (leftOutcome, leftState) = handleOutcome s l
-          (rightOutcome, rightState) = handleOutcome leftState r
-       in (Combined leftOutcome rightOutcome, rightState)
+      let (leftOutcome, newState) = handleOutcome s l
+          (rightOutcome, newState') = handleOutcome newState r
+       in (Combined leftOutcome rightOutcome, newState')
 
 processEffect ::
   ( MonadAsync m
