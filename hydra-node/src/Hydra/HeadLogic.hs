@@ -700,6 +700,7 @@ onOpenNetworkReqSn env ledger st otherParty sn requestedTxIds =
           let snapshotSignature = sign signingKey nextSnapshot
           -- Spec: T̂ ← {tx | ∀tx ∈ T̂ , Û ◦ tx ≠ ⊥} and L̂ ← Û ◦ T̂
           let (seenTxs', seenUTxO') = pruneTransactions u
+          let allTxs' = foldr Map.delete allTxs requestedTxIds
           NewState
             ( Open
                 st
@@ -708,6 +709,7 @@ onOpenNetworkReqSn env ledger st otherParty sn requestedTxIds =
                         { seenSnapshot = SeenSnapshot nextSnapshot mempty
                         , seenTxs = seenTxs'
                         , seenUTxO = seenUTxO'
+                        , allTxs = allTxs'
                         }
                   }
             )
