@@ -55,7 +55,7 @@ import Hydra.Party (Party (..))
 import qualified Hydra.Prelude as Prelude
 import Hydra.Snapshot (ConfirmedSnapshot (..), Snapshot (..), getSnapshot)
 import Test.Aeson.GenericSpecs (roundtripAndGoldenSpecs)
-import Test.Hydra.Fixture (alice, aliceSk, allVKeys, bob, bobSk, carol, carolSk, cperiod)
+import Test.Hydra.Fixture (alice, aliceSk, bob, bobSk, carol, carolSk, cperiod)
 import Test.QuickCheck.Monadic (assert, monadicIO, pick, run)
 
 spec :: Spec
