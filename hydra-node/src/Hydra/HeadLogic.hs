@@ -700,7 +700,6 @@ onOpenNetworkReqSn env ledger st otherParty sn requestedTxIds =
           let snapshotSignature = sign signingKey nextSnapshot
           -- Spec: T̂ ← {tx | ∀tx ∈ T̂ , Û ◦ tx ≠ ⊥} and L̂ ← Û ◦ T̂
           let (seenTxs', seenUTxO') = pruneTransactions u
-          let allTxs' = foldr Map.delete allTxs requestedTxIds
           NewState
             ( Open
                 st
@@ -709,7 +708,6 @@ onOpenNetworkReqSn env ledger st otherParty sn requestedTxIds =
                         { seenSnapshot = SeenSnapshot nextSnapshot mempty
                         , seenTxs = seenTxs'
                         , seenUTxO = seenUTxO'
-                        , allTxs = allTxs'
                         }
                   }
             )
@@ -717,9 +715,12 @@ onOpenNetworkReqSn env ledger st otherParty sn requestedTxIds =
  where
   requireReqSn continue =
     if
-        | sn /= seenSn + 1 -> Error $ RequireFailed $ ReqSnNumberInvalid{requestedSn = sn, lastSeenSn = seenSn}
-        | not (isLeader parameters otherParty sn) -> Error $ RequireFailed $ ReqSnNotLeader{requestedSn = sn, leader = otherParty}
-        | otherwise -> continue
+        | sn /= seenSn + 1 ->
+            Error $ RequireFailed $ ReqSnNumberInvalid{requestedSn = sn, lastSeenSn = seenSn}
+        | not (isLeader parameters otherParty sn) ->
+            Error $ RequireFailed $ ReqSnNotLeader{requestedSn = sn, leader = otherParty}
+        | otherwise ->
+            continue
 
   waitNoSnapshotInFlight continue =
     if confSn == seenSn
@@ -797,13 +798,14 @@ onOpenNetworkAckSn env openState otherParty snapshotSignature sn =
   -- Spec: require s ∈ {ŝ, ŝ + 1}
   requireValidAckSn $ do
     -- Spec: wait ŝ = s
-    waitOnSeenSnapshot $ \snapshot sigs -> do
+    waitOnSeenSnapshot $ \snapshot@Snapshot{confirmed} sigs -> do
       -- Spec: (j,.) ∉ ̂Σ
       requireNotSignedYet sigs $ do
         let sigs' = Map.insert otherParty snapshotSignature sigs
         ifAllMembersHaveSigned snapshot sigs' $ do
           -- Spec: σ̃ ← MS-ASig(k_H, ̂Σ̂)
           let multisig = aggregateInOrder sigs' parties
+          let allTxs' = foldr Map.delete allTxs confirmed
           requireVerifiedMultisignature multisig snapshot $
             NewState
               ( onlyUpdateCoordinatedHeadState $
@@ -814,6 +816,7 @@ onOpenNetworkAckSn env openState otherParty snapshotSignature sn =
                           , signatures = multisig
                           }
                     , seenSnapshot = LastSeenSnapshot (number snapshot)
+                    , allTxs = allTxs'
                     }
               )
               `Combined` Effects [ClientEffect $ SnapshotConfirmed headId snapshot multisig]
@@ -862,7 +865,7 @@ onOpenNetworkAckSn env openState otherParty snapshotSignature sn =
   onlyUpdateCoordinatedHeadState chs' =
     Open openState{coordinatedHeadState = chs'}
 
-  CoordinatedHeadState{seenSnapshot} = coordinatedHeadState
+  CoordinatedHeadState{seenSnapshot, allTxs} = coordinatedHeadState
 
   OpenState
     { parameters = HeadParameters{parties}
