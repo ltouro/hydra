@@ -27,8 +27,10 @@ import Hydra.HeadLogic (
   Environment (..),
   Event (..),
   HeadState (..),
+  HeadStateEvent,
   Outcome (..),
   defaultTTL,
+  updateHeadState,
  )
 import qualified Hydra.HeadLogic as Logic
 import Hydra.Ledger (IsTx, Ledger)
@@ -67,7 +69,7 @@ data HydraNode tx m = HydraNode
   , server :: Server tx m
   , ledger :: Ledger tx
   , env :: Environment
-  , persistence :: Persistence (HeadState tx) m
+  , persistence :: Persistence (HeadStateEvent tx) m
   }
 
 data HydraNodeLog tx
@@ -122,8 +124,8 @@ stepHydraNode tracer node = do
     Wait _reason -> do
       putEventAfter eq waitDelay (decreaseTTL e)
       pure []
-    NewState s effs -> do
-      save s
+    NewState events effs -> do
+      mapM_ save events
       pure effs
     OnlyEffects effs -> do
       pure effs
@@ -157,7 +159,9 @@ processNextEvent HydraNode{nodeState, ledger, env} e =
   modifyHeadState $ \s ->
     case Logic.update env ledger s e of
       OnlyEffects effects -> (OnlyEffects effects, s)
-      NewState s' effects -> (NewState s' effects, s')
+      NewState events effects ->
+        let s' = foldl' updateHeadState s events
+         in (NewState events effects, s')
       Error err -> (Error err, s)
       Wait reason -> (Wait reason, s)
  where
