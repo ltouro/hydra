@@ -43,6 +43,7 @@ import Hydra.HeadLogic (
   WaitReason (..),
   defaultTTL,
   update,
+  updateHeadState,
  )
 import Hydra.Ledger (ChainSlot (..), Ledger (..), ValidationError (..))
 import Hydra.Ledger.Cardano (cardanoLedger, genKeyPair, genOutput, mkRangedTx)
@@ -300,7 +301,7 @@ spec =
 
       it "cannot observe collect com after abort" $ do
         afterAbort <-
-          runEvents  bobEnv ledger (inInitialState threeParties) $
+          runEvents bobEnv ledger (inInitialState threeParties) $
             step (observationEvent OnAbortTx)
 
         let invalidEvent = observationEvent OnCollectComTx
@@ -324,7 +325,7 @@ spec =
         outcome1 `hasNoEffectSatisfying` \case
           ClientEffect (ReadyToFanout _) -> True
           _ -> False
-        s1 <- assertNewState outcome1
+        s1 <- assertNewState s0 outcome1
         let oneSecondsPastDeadline = addUTCTime 1 contestationDeadline
             someChainSlot = arbitrary `generateWith` 42
             stepTimePastDeadline = OnChainEvent $ Tick oneSecondsPastDeadline someChainSlot
@@ -348,7 +349,10 @@ spec =
             s1 = update bobEnv ledger s0 closeTxEvent
         s1 `hasEffect` contestTxEffect
         s1 `shouldSatisfy` \case
-          NewState (Closed ClosedState{}) _ -> True
+          NewState events _ ->
+            case foldl' updateHeadState s0 events of
+              Closed ClosedState{} -> True
+              _ -> False
           _ -> False
 
       it "re-contests when detecting contest with old snapshot" $ do
@@ -551,7 +555,7 @@ getConfirmedSnapshot = \case
 assertUpdateState :: (MonadState (HeadState tx) m, HasCallStack, IsChainState tx) => Environment -> Ledger tx -> Event tx -> m (HeadState tx)
 assertUpdateState env ledger event = do
   st <- get
-  st' <- assertNewState $ update env ledger st event
+  st' <- assertNewState st $ update env ledger st event
   put st'
   pure st'
 
@@ -564,17 +568,20 @@ data StepState tx = StepState
 -- | Asserts that the update function will update the state (return a NewState) for this Event
 step :: (MonadState (StepState tx) m, HasCallStack, IsChainState tx) => Event tx -> m (HeadState tx)
 step event = do
-  StepState{ headState, env, ledger} <- get
-  headState' <- assertNewState $ update env ledger headState event
-  put StepState{ env, ledger, headState = headState' }
+  StepState{headState, env, ledger} <- get
+  headState' <- assertNewState headState $ update env ledger headState event
+  put StepState{env, ledger, headState = headState'}
   pure headState'
 
 assertNewState ::
   (HasCallStack, IsChainState tx, Applicative m) =>
+  HeadState tx ->
   Outcome tx ->
   m (HeadState tx)
-assertNewState = \case
-  NewState st _ -> pure st
+assertNewState s0 = \case
+  NewState events _ ->
+    let st = foldl' updateHeadState s0 events
+     in pure st
   OnlyEffects effects -> Hydra.Prelude.error $ "Unexpected 'OnlyEffects' outcome: " <> show effects
   Error e -> Hydra.Prelude.error $ "Unexpected 'Error' outcome: " <> show e
   Wait r -> Hydra.Prelude.error $ "Unexpected 'Wait' outcome with reason: " <> show r

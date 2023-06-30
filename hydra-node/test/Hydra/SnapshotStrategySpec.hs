@@ -1,5 +1,4 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Hydra.SnapshotStrategySpec where
 
@@ -12,6 +11,8 @@ import Hydra.HeadLogic (
   CoordinatedHeadState (..),
   Effect (..),
   Environment (..),
+  HeadState (Open),
+  HeadStateEvent (..),
   NoSnapshotReason (..),
   Outcome (..),
   SeenSnapshot (..),
@@ -19,6 +20,7 @@ import Hydra.HeadLogic (
   emitSnapshot,
   isLeader,
   newSn,
+  updateHeadState,
  )
 import Hydra.HeadLogicSpec (inOpenState')
 import Hydra.Ledger (Ledger (..))
@@ -100,21 +102,25 @@ spec = do
       describe "Snapshot Emission" $ do
         it "update seenSnapshot state when sending ReqSn" $ do
           let tx = aValidTx 1
+              initialSnapshot = InitialSnapshot initUTxO
               coordinatedState =
                 CoordinatedHeadState
                   { seenUTxO = initUTxO
                   , seenTxs = [tx]
-                  , confirmedSnapshot = InitialSnapshot initUTxO
+                  , confirmedSnapshot = initialSnapshot
                   , seenSnapshot = NoSeenSnapshot
                   }
-              st =
-                inOpenState' threeParties coordinatedState
-              st' =
-                inOpenState' threeParties $
-                  coordinatedState{seenSnapshot = RequestedSnapshot{lastSeen = 0, requested = 1}}
 
-          emitSnapshot (envFor aliceSk) (NewState st [])
-            `shouldBe` NewState st' [NetworkEffect $ ReqSn alice 1 [tx]]
+          case inOpenState' threeParties coordinatedState of
+            Open ost -> do
+              let expectedEvent = SnapshotEmited{requested = 1, lastSeenSnapshot = NoSeenSnapshot}
+              emitSnapshot (envFor aliceSk) ost (NewState [] [])
+                `shouldBe` NewState [expectedEvent] [NetworkEffect $ ReqSn alice 1 [tx]]
+
+              let seenSnapshot = RequestedSnapshot{lastSeen = 0, requested = 1}
+                  st' = inOpenState' threeParties $ coordinatedState{seenSnapshot}
+              foldl' updateHeadState (Open ost) [expectedEvent] `shouldBe` st'
+            _ -> Hydra.Prelude.error "unexpected"
 
 prop_singleMemberHeadAlwaysSnapshot :: ConfirmedSnapshot SimpleTx -> Property
 prop_singleMemberHeadAlwaysSnapshot sn = monadicST $ do
@@ -153,5 +159,6 @@ prop_thereIsAlwaysALeader :: Property
 prop_thereIsAlwaysALeader =
   forAll arbitrary $ \sn ->
     forAll arbitrary $ \params@HeadParameters{parties} ->
-      length parties > 0 ==>
-        any (\p -> isLeader params p sn) parties
+      length parties
+        > 0
+        ==> any (\p -> isLeader params p sn) parties
