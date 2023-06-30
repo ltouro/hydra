@@ -35,6 +35,7 @@ import Hydra.Chain (
 import Hydra.ContestationPeriod
 import Hydra.Crypto (
   HydraKey,
+  MultiSignature,
   Signature,
   SigningKey,
   VerificationKey,
@@ -370,6 +371,42 @@ deriving instance (IsTx tx, IsChainState tx) => FromJSON (Outcome tx)
 instance (IsTx tx, Arbitrary (ChainStateType tx)) => Arbitrary (Outcome tx) where
   arbitrary = genericArbitrary
 
+data HeadStateEvent tx
+  = HeadInitialized {headId :: HeadId, party :: [Party]}
+  | TxCommitted {headId :: HeadId, committer :: Party, utxo :: UTxOType tx}
+  | HeadAborted {headId :: HeadId, utxo :: UTxOType tx}
+  | HeadOpened {headId :: HeadId, initialSnapshot :: ConfirmedSnapshot tx}
+  | NewTxReceived {headId :: HeadId, tx :: tx}
+  | ReqSnReceived
+      { headId :: HeadId
+      , seenSn :: Snapshot tx
+      , seenTxs :: [tx]
+      , seenUTxO :: UTxOType tx
+      }
+  | AckSnConfirmed
+      { headId :: HeadId
+      , lastSeenSnapshot :: Snapshot tx
+      , multisig :: MultiSignature (Snapshot tx)
+      }
+  | AckSnPending
+      { headId :: HeadId
+      , snapshot :: Snapshot tx
+      , sigs :: Map Party (Signature (Snapshot tx))
+      }
+  | HeadClosed
+      { headId :: HeadId
+      , closedSnapshotNumber :: SnapshotNumber
+      , contestationDeadline :: UTCTime
+      }
+  | HeadFannedOut {headId :: HeadId, utxo :: UTxOType tx}
+  | ReadyToFanoutReceived {headId :: HeadId}
+  | TickReceived {headId :: HeadId, chainSlot :: ChainSlot}
+  | SnapshotEmited
+      { headId :: HeadId
+      , requester :: Party
+      , requestedSnapshot :: Snapshot tx
+      }
+
 data WaitReason
   = WaitOnNotApplicableTx {validationError :: ValidationError}
   | WaitOnSnapshotNumber {waitingFor :: SnapshotNumber}
@@ -425,6 +462,7 @@ onIdleChainInitTx ::
   HeadId ->
   Outcome tx
 onIdleChainInitTx newChainState parties contestationPeriod headId =
+  -- HeadStateEvent: HeadInitialized
   NewState
     ( Initial
         InitialState
@@ -477,6 +515,7 @@ onInitialChainCommitTx ::
   UTxOType tx ->
   Outcome tx
 onInitialChainCommitTx st newChainState pt utxo =
+  -- HeadStateEvent: TxCommitted
   NewState newState $
     notifyClient
       : [postCollectCom | canCollectCom]
@@ -531,6 +570,7 @@ onInitialChainAbortTx ::
   HeadId ->
   Outcome tx
 onInitialChainAbortTx newChainState committed headId =
+  -- HeadStateEvent: HeadAborted
   NewState
     (Idle IdleState{chainState = newChainState})
     [ClientEffect $ HeadIsAborted{headId, utxo = fold committed}]
@@ -547,6 +587,7 @@ onInitialChainCollectTx ::
   ChainStateType tx ->
   Outcome tx
 onInitialChainCollectTx st newChainState =
+  -- HeadStateEvent: HeadOpened
   NewState
     ( Open
         OpenState
@@ -608,6 +649,7 @@ onOpenNetworkReqTx env ledger st ttl tx =
           OnlyEffects [ClientEffect $ TxInvalid headId seenUTxO tx err]
       | otherwise -> Wait $ WaitOnNotApplicableTx err
     Right utxo' ->
+      -- HeadStateEvent: NewTxReceived
       NewState
         ( Open
             st
@@ -667,6 +709,7 @@ onOpenNetworkReqSn env ledger st otherParty sn requestedTxs =
         let snapshotSignature = sign signingKey nextSnapshot
         -- Spec: T̂ ← {tx | ∀tx ∈ T̂ , Û ◦ tx ≠ ⊥} and L̂ ← Û ◦ T̂
         let (seenTxs', seenUTxO') = pruneTransactions u
+        -- HeadStateEvent: ReqSnReceived
         NewState
           ( Open
               st
@@ -763,6 +806,7 @@ onOpenNetworkAckSn env openState otherParty snapshotSignature sn =
           -- Spec: σ̃ ← MS-ASig(k_H, ̂Σ̂)
           let multisig = aggregateInOrder sigs' parties
           requireVerifiedMultisignature multisig snapshot $ do
+            -- HeadStateEvent: AckSnConfirmed
             NewState
               ( onlyUpdateCoordinatedHeadState $
                   coordinatedHeadState
@@ -798,7 +842,8 @@ onOpenNetworkAckSn env openState otherParty snapshotSignature sn =
   ifAllMembersHaveSigned snapshot sigs' cont =
     if Map.keysSet sigs' == Set.fromList parties
       then cont
-      else
+      else -- HeadStateEvent: AckSnPending
+
         NewState
           ( onlyUpdateCoordinatedHeadState $
               coordinatedHeadState
@@ -857,6 +902,7 @@ onOpenChainCloseTx ::
   UTCTime ->
   Outcome tx
 onOpenChainCloseTx openState newChainState closedSnapshotNumber contestationDeadline =
+  -- HeadStateEvent: HeadClosed
   NewState closedState $
     notifyClient
       : [ OnChainEffect
@@ -943,6 +989,7 @@ onClosedChainFanoutTx ::
   ChainStateType tx ->
   Outcome tx
 onClosedChainFanoutTx closedState newChainState =
+  -- HeadStateEvent: HeadFannedOut
   NewState
     (Idle IdleState{chainState = newChainState})
     [ ClientEffect $ HeadIsFinalized{headId, utxo}
@@ -995,10 +1042,11 @@ update env ledger st ev = case (st, ev) of
     onOpenNetworkAckSn env openState otherParty snapshotSignature sn
   ( Open openState@OpenState{headId = ourHeadId}
     , OnChainEvent Observation{observedTx = OnCloseTx{headId, snapshotNumber = closedSnapshotNumber, contestationDeadline}, newChainState}
-    ) | ourHeadId == headId ->
-      onOpenChainCloseTx openState newChainState closedSnapshotNumber contestationDeadline
+    )
+      | ourHeadId == headId ->
+          onOpenChainCloseTx openState newChainState closedSnapshotNumber contestationDeadline
       | otherwise ->
-        Error NotOurHead{ourHeadId, otherHeadId = headId}
+          Error NotOurHead{ourHeadId, otherHeadId = headId}
   (Open OpenState{coordinatedHeadState = CoordinatedHeadState{confirmedSnapshot}, headId}, ClientEvent GetUTxO) ->
     -- TODO: Is it really intuitive that we respond from the confirmed ledger if
     -- transactions are validated against the seen ledger?
@@ -1008,6 +1056,7 @@ update env ledger st ev = case (st, ev) of
     onClosedChainContestTx closedState snapshotNumber
   (Closed cst@ClosedState{contestationDeadline, readyToFanoutSent, headId}, OnChainEvent Tick{chainTime})
     | chainTime > contestationDeadline && not readyToFanoutSent ->
+        -- HeadStateEvent: ReadyToFanoutReceived
         NewState
           (Closed cst{readyToFanoutSent = True})
           [ClientEffect $ ReadyToFanout headId]
@@ -1017,8 +1066,10 @@ update env ledger st ev = case (st, ev) of
     onClosedChainFanoutTx closedState newChainState
   -- General
   (currentState, OnChainEvent Rollback{rolledBackChainState}) ->
+    -- HeadStateEvent: RolledBack ?
     NewState (setChainState rolledBackChainState currentState) []
   (Open ost@OpenState{}, OnChainEvent Tick{chainSlot}) ->
+    -- HeadStateEvent: TickReceived
     NewState (Open ost{currentSlot = chainSlot}) []
   (_, OnChainEvent Tick{}) ->
     OnlyEffects []
@@ -1088,6 +1139,7 @@ emitSnapshot env@Environment{party} outcome =
       case newSn env parameters coordinatedHeadState of
         ShouldSnapshot sn txs -> do
           let CoordinatedHeadState{seenSnapshot} = coordinatedHeadState
+          -- HeadStateEvent: SnapshotEmited
           NewState
             ( Open
                 OpenState
