@@ -166,6 +166,17 @@ data ChainTransition
   | Fanout
   deriving (Eq, Show, Enum, Bounded)
 
+data ChainStateEvent = ChainStateEvent
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+updateChainState ::
+  ChainState ->
+  ChainStateEvent ->
+  ChainState
+updateChainState st evt = case (st, evt) of
+  _ -> st
+
 -- | An enumeration of all possible on-chain states of a Hydra Head, where each
 -- case stores the relevant information to construct & observe transactions to
 -- other states.

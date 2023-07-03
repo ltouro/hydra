@@ -5,11 +5,12 @@ module Main where
 import Hydra.Prelude
 
 import Hydra.API.Server (withAPIServer)
-import Hydra.Cardano.Api (serialiseToRawBytesHex)
-import Hydra.Chain (HeadParameters (..))
+import Hydra.Cardano.Api (Tx, serialiseToRawBytesHex)
+import Hydra.Chain (HeadParameters (..), IsChainState (..))
 import Hydra.Chain.CardanoClient (QueryPoint (..), queryGenesisParameters)
 import Hydra.Chain.Direct (initialChainState, loadChainContext, mkTinyWallet, withDirectChain)
 import Hydra.Chain.Direct.ScriptRegistry (publishHydraScripts)
+import Hydra.Chain.Direct.State (ChainStateEvent)
 import Hydra.Chain.Direct.Util (readKeyPair)
 import Hydra.HeadLogic (
   ClosedState (..),
@@ -20,7 +21,6 @@ import Hydra.HeadLogic (
   InitialState (..),
   OpenState (..),
   defaultTTL,
-  getChainState,
   updateHeadState,
  )
 import qualified Hydra.Ledger.Cardano as Ledger
@@ -84,11 +84,11 @@ main = do
           loadAll persistence >>= \case
             [] -> do
               traceWith tracer CreatedState
-              pure $ Idle IdleState{chainState = initialChainState}
+              pure $ Idle IdleState
             events -> do
               traceWith tracer LoadedState
               let
-                initialState = Idle IdleState{chainState = initialChainState}
+                initialState = Idle IdleState
                 headState = foldl' updateHeadState initialState events
                 paramsMismatch = checkParamsAgainstExistingState headState env
               unless (null paramsMismatch) $ do
@@ -102,8 +102,16 @@ main = do
               pure headState
         nodeState <- createNodeState hs
         ctx <- loadChainContext chainConfig party otherParties hydraScriptsTxId
+        chainPersistence :: PersistenceIncremental ChainStateEvent IO <- createPersistenceIncremental $ persistenceDir <> "/chain-state"
+        cs <-
+          loadAll chainPersistence >>= \case
+            [] -> do
+              traceWith tracer CreatedState
+              pure initialChainState
+            events -> do
+              pure initialChainState
         wallet <- mkTinyWallet (contramap DirectChain tracer) chainConfig
-        withDirectChain (contramap DirectChain tracer) chainConfig ctx wallet (getChainState hs) (putEvent . OnChainEvent) $ \chain -> do
+        withDirectChain (contramap DirectChain tracer) chainConfig ctx wallet cs (putEvent . OnChainEvent) $ \chain -> do
           let RunOptions{host, port, peers, nodeId} = opts
           withNetwork (contramap Network tracer) host port peers nodeId (putEvent . NetworkEvent defaultTTL) $ \hn -> do
             let RunOptions{apiHost, apiPort} = opts

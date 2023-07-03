@@ -132,42 +132,26 @@ data HeadState tx
   | Closed (ClosedState tx)
   deriving stock (Generic)
 
-instance (IsTx tx, Arbitrary (ChainStateType tx)) => Arbitrary (HeadState tx) where
+instance IsTx tx => Arbitrary (HeadState tx) where
   arbitrary = genericArbitrary
 
-deriving instance (IsTx tx, Eq (ChainStateType tx)) => Eq (HeadState tx)
-deriving instance (IsTx tx, Show (ChainStateType tx)) => Show (HeadState tx)
-deriving instance (IsTx tx, ToJSON (ChainStateType tx)) => ToJSON (HeadState tx)
-deriving instance (IsTx tx, FromJSON (ChainStateType tx)) => FromJSON (HeadState tx)
-
--- | Get the chain state in any 'HeadState'.
-getChainState :: HeadState tx -> ChainStateType tx
-getChainState = \case
-  Idle IdleState{chainState} -> chainState
-  Initial InitialState{chainState} -> chainState
-  Open OpenState{chainState} -> chainState
-  Closed ClosedState{chainState} -> chainState
-
--- | Update the chain state in any 'HeadState'.
-setChainState :: ChainStateType tx -> HeadState tx -> HeadState tx
-setChainState chainState = \case
-  Idle st -> Idle st{chainState}
-  Initial st -> Initial st{chainState}
-  Open st -> Open st{chainState}
-  Closed st -> Closed st{chainState}
+deriving instance IsTx tx => Eq (HeadState tx)
+deriving instance IsTx tx => Show (HeadState tx)
+deriving instance IsTx tx => ToJSON (HeadState tx)
+deriving instance IsTx tx => FromJSON (HeadState tx)
 
 -- ** Idle
 
 -- | An 'Idle' head only having a chain state with things seen on chain so far.
-newtype IdleState tx = IdleState {chainState :: ChainStateType tx}
+data IdleState tx = IdleState
   deriving (Generic)
 
-deriving instance Eq (ChainStateType tx) => Eq (IdleState tx)
-deriving instance Show (ChainStateType tx) => Show (IdleState tx)
-deriving anyclass instance ToJSON (ChainStateType tx) => ToJSON (IdleState tx)
-deriving anyclass instance FromJSON (ChainStateType tx) => FromJSON (IdleState tx)
+deriving instance IsTx tx => Eq (IdleState tx)
+deriving instance IsTx tx => Show (IdleState tx)
+deriving anyclass instance IsTx tx => ToJSON (IdleState tx)
+deriving anyclass instance IsTx tx => FromJSON (IdleState tx)
 
-instance (Arbitrary (ChainStateType tx)) => Arbitrary (IdleState tx) where
+instance IsTx tx => Arbitrary (IdleState tx) where
   arbitrary = genericArbitrary
 
 -- ** Initial
@@ -177,21 +161,19 @@ data InitialState tx = InitialState
   { parameters :: HeadParameters
   , pendingCommits :: PendingCommits
   , committed :: Committed tx
-  , chainState :: ChainStateType tx
   , headId :: HeadId
   }
   deriving (Generic)
 
-deriving instance (IsTx tx, Eq (ChainStateType tx)) => Eq (InitialState tx)
-deriving instance (IsTx tx, Show (ChainStateType tx)) => Show (InitialState tx)
-deriving instance (IsTx tx, ToJSON (ChainStateType tx)) => ToJSON (InitialState tx)
-deriving instance (IsTx tx, FromJSON (ChainStateType tx)) => FromJSON (InitialState tx)
+deriving instance IsTx tx => Eq (InitialState tx)
+deriving instance IsTx tx => Show (InitialState tx)
+deriving anyclass instance IsTx tx => ToJSON (InitialState tx)
+deriving anyclass instance IsTx tx => FromJSON (InitialState tx)
 
-instance (IsTx tx, Arbitrary (ChainStateType tx)) => Arbitrary (InitialState tx) where
+instance IsTx tx => Arbitrary (InitialState tx) where
   arbitrary = do
     InitialState
       <$> arbitrary
-      <*> arbitrary
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
@@ -207,22 +189,20 @@ type Committed tx = Map Party (UTxOType tx)
 data OpenState tx = OpenState
   { parameters :: HeadParameters
   , coordinatedHeadState :: CoordinatedHeadState tx
-  , chainState :: ChainStateType tx
   , headId :: HeadId
   , currentSlot :: ChainSlot
   }
   deriving (Generic)
 
-deriving instance (IsTx tx, Eq (ChainStateType tx)) => Eq (OpenState tx)
-deriving instance (IsTx tx, Show (ChainStateType tx)) => Show (OpenState tx)
-deriving instance (IsTx tx, ToJSON (ChainStateType tx)) => ToJSON (OpenState tx)
-deriving instance (IsTx tx, FromJSON (ChainStateType tx)) => FromJSON (OpenState tx)
+deriving instance IsTx tx => Eq (OpenState tx)
+deriving instance IsTx tx => Show (OpenState tx)
+deriving instance IsTx tx => ToJSON (OpenState tx)
+deriving instance IsTx tx => FromJSON (OpenState tx)
 
-instance (IsTx tx, Arbitrary (ChainStateType tx)) => Arbitrary (OpenState tx) where
+instance IsTx tx => Arbitrary (OpenState tx) where
   arbitrary =
     OpenState
       <$> arbitrary
-      <*> arbitrary
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
@@ -296,21 +276,19 @@ data ClosedState tx = ClosedState
   , readyToFanoutSent :: Bool
   -- ^ Tracks whether we have informed clients already about being
   -- 'ReadyToFanout'.
-  , chainState :: ChainStateType tx
   , headId :: HeadId
   }
   deriving (Generic)
 
-deriving instance (IsTx tx, Eq (ChainStateType tx)) => Eq (ClosedState tx)
-deriving instance (IsTx tx, Show (ChainStateType tx)) => Show (ClosedState tx)
-deriving instance (IsTx tx, ToJSON (ChainStateType tx)) => ToJSON (ClosedState tx)
-deriving instance (IsTx tx, FromJSON (ChainStateType tx)) => FromJSON (ClosedState tx)
+deriving instance IsTx tx => Eq (ClosedState tx)
+deriving instance IsTx tx => Show (ClosedState tx)
+deriving instance IsTx tx => ToJSON (ClosedState tx)
+deriving instance IsTx tx => FromJSON (ClosedState tx)
 
-instance (IsTx tx, Arbitrary (ChainStateType tx)) => Arbitrary (ClosedState tx) where
+instance IsTx tx => Arbitrary (ClosedState tx) where
   arbitrary =
     ClosedState
       <$> arbitrary
-      <*> arbitrary
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
@@ -376,20 +354,16 @@ data HeadStateEvent tx
       { headId :: HeadId
       , contestationPeriod :: ContestationPeriod
       , parties :: [Party]
-      , newChainState :: ChainStateType tx
       }
   | TxCommitted
       { remainingParties :: Set Party
       , newCommitted :: Committed tx
-      , newChainState :: ChainStateType tx
       }
   | HeadAborted
-      { newChainState :: ChainStateType tx
-      }
   | HeadOpened
       { initialSnapshot :: ConfirmedSnapshot tx
       , u0 :: UTxOType tx
-      , newChainState :: ChainStateType tx
+      , currentSlot :: ChainSlot
       }
   | NewTxReceived
       { tx :: tx
@@ -410,11 +384,10 @@ data HeadStateEvent tx
       }
   | HeadClosed
       { contestationDeadline :: UTCTime
-      , newChainState :: ChainStateType tx
       }
-  | HeadFannedOut {newChainState :: ChainStateType tx}
+  | HeadFannedOut
   | ReadyToFanoutReceived
-  | RolledBack {rolledBackChainState :: ChainStateType tx}
+  | RolledBack
   | TickReceived {currentSlot :: ChainSlot}
   | SnapshotEmited
       { lastSeenSnapshot :: SeenSnapshot tx
@@ -422,12 +395,12 @@ data HeadStateEvent tx
       }
   deriving stock (Generic)
 
-deriving instance (IsTx tx, IsChainState tx) => Eq (HeadStateEvent tx)
-deriving instance (IsTx tx, IsChainState tx) => Show (HeadStateEvent tx)
-deriving instance (IsTx tx, IsChainState tx) => ToJSON (HeadStateEvent tx)
-deriving instance (IsTx tx, IsChainState tx) => FromJSON (HeadStateEvent tx)
+deriving instance IsTx tx => Eq (HeadStateEvent tx)
+deriving instance IsTx tx => Show (HeadStateEvent tx)
+deriving instance IsTx tx => ToJSON (HeadStateEvent tx)
+deriving instance IsTx tx => FromJSON (HeadStateEvent tx)
 
-instance (IsTx tx, Arbitrary (ChainStateType tx)) => Arbitrary (HeadStateEvent tx) where
+instance IsTx tx => Arbitrary (HeadStateEvent tx) where
   arbitrary = genericArbitrary
 
 updateHeadState ::
@@ -436,33 +409,30 @@ updateHeadState ::
   HeadStateEvent tx ->
   HeadState tx
 updateHeadState st evt = case (st, evt) of
-  (Idle _, HeadInitialized{headId, contestationPeriod, parties, newChainState}) ->
+  (Idle _, HeadInitialized{headId, contestationPeriod, parties}) ->
     Initial
       InitialState
         { parameters = HeadParameters{contestationPeriod, parties}
         , pendingCommits = Set.fromList parties
         , committed = mempty
-        , chainState = newChainState
         , headId
         }
-  (Initial ist@InitialState{headId}, TxCommitted{remainingParties, newCommitted, newChainState}) ->
+  (Initial ist@InitialState{headId}, TxCommitted{remainingParties, newCommitted}) ->
     Initial
       ist
         { pendingCommits = remainingParties
         , committed = newCommitted
-        , chainState = newChainState
         , headId
         }
-  (Initial _, HeadAborted{newChainState}) ->
-    Idle IdleState{chainState = newChainState}
-  (Initial InitialState{headId, parameters}, HeadOpened{initialSnapshot, u0, newChainState}) ->
+  (Initial _, HeadAborted) ->
+    Idle IdleState
+  (Initial InitialState{headId, parameters}, HeadOpened{initialSnapshot, u0, currentSlot}) ->
     Open
       OpenState
         { parameters
         , coordinatedHeadState = CoordinatedHeadState u0 mempty initialSnapshot NoSeenSnapshot
-        , chainState = newChainState
         , headId
-        , currentSlot = chainStateSlot newChainState
+        , currentSlot
         }
   ( Open ost@OpenState{coordinatedHeadState = coordinatedHeadState@CoordinatedHeadState{seenTxs}}
     , NewTxReceived{tx, utxo}
@@ -507,7 +477,7 @@ updateHeadState st evt = case (st, evt) of
               }
         }
   ( Open OpenState{headId, parameters, coordinatedHeadState = CoordinatedHeadState{confirmedSnapshot}}
-    , HeadClosed{contestationDeadline, newChainState}
+    , HeadClosed{contestationDeadline}
     ) ->
       Closed
         ClosedState
@@ -515,11 +485,10 @@ updateHeadState st evt = case (st, evt) of
           , confirmedSnapshot
           , contestationDeadline
           , readyToFanoutSent = False
-          , chainState = newChainState
           , headId
           }
-  (Closed _, HeadFannedOut{newChainState}) ->
-    Idle IdleState{chainState = newChainState}
+  (Closed _, HeadFannedOut) ->
+    Idle IdleState
   (Closed cst, ReadyToFanoutReceived{}) ->
     Closed cst{readyToFanoutSent = True}
   (Open ost, TickReceived{currentSlot}) ->
@@ -538,8 +507,8 @@ updateHeadState st evt = case (st, evt) of
                       }
                 }
           }
-  (_, RolledBack{rolledBackChainState}) ->
-    setChainState rolledBackChainState st
+  (_, RolledBack) ->
+    st
   _ ->
     Hydra.Prelude.error $
       "Invalid State Transition: " <> show evt <> " - " <> show st
@@ -592,15 +561,13 @@ onIdleClientInit env =
 --
 -- __Transition__: 'IdleState' → 'InitialState'
 onIdleChainInitTx ::
-  -- | New chain state.
-  ChainStateType tx ->
   [Party] ->
   ContestationPeriod ->
   HeadId ->
   Outcome tx
-onIdleChainInitTx newChainState parties contestationPeriod headId =
+onIdleChainInitTx parties contestationPeriod headId =
   NewState
-    [HeadInitialized{headId, contestationPeriod, parties, newChainState}]
+    [HeadInitialized{headId, contestationPeriod, parties}]
     [ClientEffect $ HeadIsInitializing headId (fromList parties)]
 
 -- | Client request to commit a UTxO entry to the head. Provided the client
@@ -635,20 +602,18 @@ onInitialClientCommit env st clientInput =
 onInitialChainCommitTx ::
   Monoid (UTxOType tx) =>
   InitialState tx ->
-  -- | New chain state
-  ChainStateType tx ->
   -- | Comitting party
   Party ->
   -- | Committed UTxO
   UTxOType tx ->
   Outcome tx
-onInitialChainCommitTx st newChainState pt utxo =
+onInitialChainCommitTx st pt utxo =
   NewState events $
     notifyClient
       : [postCollectCom | canCollectCom]
  where
   events =
-    [TxCommitted{remainingParties, newCommitted, newChainState}]
+    [TxCommitted{remainingParties, newCommitted}]
 
   newCommitted = Map.insert pt utxo committed
 
@@ -685,13 +650,12 @@ onInitialClientAbort st =
 onInitialChainAbortTx ::
   Monoid (UTxOType tx) =>
   -- | New chain state
-  ChainStateType tx ->
   Committed tx ->
   HeadId ->
   Outcome tx
-onInitialChainAbortTx newChainState committed headId =
+onInitialChainAbortTx committed headId =
   NewState
-    [HeadAborted{newChainState}]
+    [HeadAborted]
     [ClientEffect $ HeadIsAborted{headId, utxo = fold committed}]
 
 -- | Observe a collectCom transaction. We initialize the 'OpenState' using the
@@ -700,14 +664,14 @@ onInitialChainAbortTx newChainState committed headId =
 --
 -- __Transition__: 'InitialState' → 'OpenState'
 onInitialChainCollectTx ::
-  (IsChainState tx) =>
+  IsChainState tx =>
   InitialState tx ->
   -- | New chain state
   ChainStateType tx ->
   Outcome tx
 onInitialChainCollectTx st newChainState =
   NewState
-    [HeadOpened{initialSnapshot, u0, newChainState}]
+    [HeadOpened{initialSnapshot, u0, currentSlot = Hydra.Chain.chainStateSlot newChainState}]
     [ClientEffect $ HeadIsOpen{headId, utxo = u0}]
  where
   u0 = fold committed
@@ -970,14 +934,12 @@ onOpenClientClose st =
 -- __Transition__: 'OpenState' → 'ClosedState'
 onOpenChainCloseTx ::
   OpenState tx ->
-  -- | New chain state.
-  ChainStateType tx ->
   -- | Closed snapshot number.
   SnapshotNumber ->
   -- | Contestation deadline.
   UTCTime ->
   Outcome tx
-onOpenChainCloseTx openState newChainState closedSnapshotNumber contestationDeadline =
+onOpenChainCloseTx openState closedSnapshotNumber contestationDeadline =
   NewState headStateEvents $
     notifyClient
       : [ OnChainEffect
@@ -990,7 +952,7 @@ onOpenChainCloseTx openState newChainState closedSnapshotNumber contestationDead
     number (getSnapshot confirmedSnapshot) > closedSnapshotNumber
 
   headStateEvents =
-    [HeadClosed{contestationDeadline, newChainState}]
+    [HeadClosed{contestationDeadline}]
 
   notifyClient =
     ClientEffect $
@@ -1053,11 +1015,10 @@ onClosedClientFanout closedState =
 onClosedChainFanoutTx ::
   ClosedState tx ->
   -- | New chain state
-  ChainStateType tx ->
   Outcome tx
-onClosedChainFanoutTx closedState newChainState =
+onClosedChainFanoutTx closedState =
   NewState
-    [HeadFannedOut{newChainState}]
+    [HeadFannedOut]
     [ ClientEffect $ HeadIsFinalized{headId, utxo}
     ]
  where
@@ -1078,19 +1039,19 @@ update ::
 update env ledger st ev = case (st, ev) of
   (Idle _, ClientEvent Init) ->
     onIdleClientInit env
-  (Idle _, OnChainEvent Observation{observedTx = OnInitTx{headId, contestationPeriod, parties}, newChainState}) ->
-    onIdleChainInitTx newChainState parties contestationPeriod headId
+  (Idle _, OnChainEvent Observation{observedTx = OnInitTx{headId, contestationPeriod, parties}}) ->
+    onIdleChainInitTx parties contestationPeriod headId
   -- Initial
   (Initial idleState, ClientEvent clientInput@(Commit _)) ->
     onInitialClientCommit env idleState clientInput
-  (Initial initialState, OnChainEvent Observation{observedTx = OnCommitTx{party = pt, committed = utxo}, newChainState}) ->
-    onInitialChainCommitTx initialState newChainState pt utxo
+  (Initial initialState, OnChainEvent Observation{observedTx = OnCommitTx{party = pt, committed = utxo}}) ->
+    onInitialChainCommitTx initialState pt utxo
   (Initial initialState, ClientEvent Abort) ->
     onInitialClientAbort initialState
   (Initial initialState, OnChainEvent Observation{observedTx = OnCollectComTx{}, newChainState}) ->
     onInitialChainCollectTx initialState newChainState
-  (Initial InitialState{headId, committed}, OnChainEvent Observation{observedTx = OnAbortTx{}, newChainState}) ->
-    onInitialChainAbortTx newChainState committed headId
+  (Initial InitialState{headId, committed}, OnChainEvent Observation{observedTx = OnAbortTx{}}) ->
+    onInitialChainAbortTx committed headId
   (Initial InitialState{committed, headId}, ClientEvent GetUTxO) ->
     OnlyEffects [ClientEffect . GetUTxOResponse headId $ fold committed]
   -- Open
@@ -1107,10 +1068,10 @@ update env ledger st ev = case (st, ev) of
     -- XXX: ttl == 0 not handled for AckSn
     onOpenNetworkAckSn env openState otherParty snapshotSignature sn
   ( Open openState@OpenState{headId = ourHeadId}
-    , OnChainEvent Observation{observedTx = OnCloseTx{headId, snapshotNumber = closedSnapshotNumber, contestationDeadline}, newChainState}
+    , OnChainEvent Observation{observedTx = OnCloseTx{headId, snapshotNumber = closedSnapshotNumber, contestationDeadline}}
     )
       | ourHeadId == headId ->
-          onOpenChainCloseTx openState newChainState closedSnapshotNumber contestationDeadline
+          onOpenChainCloseTx openState closedSnapshotNumber contestationDeadline
       | otherwise ->
           Error NotOurHead{ourHeadId, otherHeadId = headId}
   (Open OpenState{coordinatedHeadState = CoordinatedHeadState{confirmedSnapshot}, headId}, ClientEvent GetUTxO) ->
@@ -1127,11 +1088,11 @@ update env ledger st ev = case (st, ev) of
           [ClientEffect $ ReadyToFanout headId]
   (Closed closedState, ClientEvent Fanout) ->
     onClosedClientFanout closedState
-  (Closed closedState, OnChainEvent Observation{observedTx = OnFanoutTx{}, newChainState}) ->
-    onClosedChainFanoutTx closedState newChainState
+  (Closed closedState, OnChainEvent Observation{observedTx = OnFanoutTx{}}) ->
+    onClosedChainFanoutTx closedState
   -- General
-  (_, OnChainEvent Rollback{rolledBackChainState}) ->
-    NewState [RolledBack{rolledBackChainState}] []
+  (_, OnChainEvent Rollback{}) ->
+    NewState [RolledBack] []
   (Open _, OnChainEvent Tick{chainSlot}) ->
     NewState [TickReceived{currentSlot = chainSlot}] []
   (_, OnChainEvent Tick{}) ->
