@@ -317,11 +317,13 @@ spec =
             secondReqTx = NetworkEvent defaultTTL $ ReqTx alice (aValidTx 51)
             secondReqSn = NetworkEvent defaultTTL $ ReqSn theLeader nextSN [51]
 
-        s1 <- assertNewState $ update bobEnv ledger s0 firstReqTx
-        s2 <- assertNewState $ update bobEnv ledger s1 firstReqSn
-        s3 <- assertNewState $ update bobEnv ledger s2 secondReqTx
+        s1 <-
+          runEvents bobEnv ledger (inInitialState threeParties) $ do
+            step firstReqTx
+            step firstReqSn
+            step secondReqTx
 
-        update bobEnv ledger s3 secondReqSn `shouldSatisfy` \case
+        update bobEnv ledger s1 secondReqSn `shouldSatisfy` \case
           Error RequireFailed{} -> True
           _ -> False
 

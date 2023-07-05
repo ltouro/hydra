@@ -368,7 +368,7 @@ instance Arbitrary (TxIdType tx) => Arbitrary (RequirementFailure tx) where
 data Outcome tx
   = Effects {effects :: [Effect tx]}
   | NewState {headState :: HeadState tx}
-  | Wait {reason :: WaitReason}
+  | Wait {reason :: WaitReason tx}
   | Error {error :: LogicError tx}
   | Combined {left :: Outcome tx, right :: Outcome tx}
   deriving stock (Generic)
@@ -1153,7 +1153,7 @@ emitSnapshot env@Environment{party} outcome =
                   , currentSlot
                   }
             )
-            `Combined` Effects (NetworkEffect (ReqSn party sn (txId <$> txs)) : effects)
+            `Combined` Effects [NetworkEffect (ReqSn party sn (txId <$> txs))]
         _ -> outcome
     Combined l r -> Combined (emitSnapshot env l) (emitSnapshot env r)
     _ -> outcome
